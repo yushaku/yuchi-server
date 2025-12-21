@@ -4,7 +4,8 @@ import { logger } from '@/middleware/logger';
 import { corsMiddleware } from '@/middleware/cors';
 import { errorHandler } from '@/middleware/error-handler';
 import { swaggerPlugin } from '@/middleware/swagger';
-import { routes } from '@/routes';
+import { health } from '@/modules/health';
+import { user } from '@/modules/user';
 
 export const app = new Elysia()
   .use(swaggerPlugin)
@@ -26,7 +27,9 @@ export const app = new Elysia()
       },
     },
   )
-  .use(routes)
+  // ROUTES HERE
+  .use(health)
+  .use(user)
   .listen(env.PORT);
 
 console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`);

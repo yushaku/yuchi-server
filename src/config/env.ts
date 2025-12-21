@@ -1,5 +1,29 @@
+import { z } from 'zod';
+
+const envSchema = z.object({
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  GOOGLE_CLIENT_ID: z.string().min(1, 'GOOGLE_CLIENT_ID is required'),
+  GOOGLE_CLIENT_SECRET: z.string().min(1, 'GOOGLE_CLIENT_SECRET is required'),
+  GOOGLE_REDIRECT_URI: z
+    .string()
+    .url()
+    .refine((val) => val.length > 0, {
+      message: 'GOOGLE_REDIRECT_URI must be a valid URL',
+    }),
+  JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
+});
+
+const validatedEnv = envSchema.parse({
+  DATABASE_URL: process.env.DATABASE_URL,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+  JWT_SECRET: process.env.JWT_SECRET,
+});
+
 export const env = {
-  PORT: process.env.PORT || 3000,
+  PORT: process.env.PORT ? Number(process.env.PORT) : 3000,
   NODE_ENV: process.env.NODE_ENV || 'development',
   API_PREFIX: process.env.API_PREFIX || '/api',
+  ...validatedEnv,
 } as const;
