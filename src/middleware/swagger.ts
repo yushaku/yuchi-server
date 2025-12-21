@@ -11,7 +11,7 @@ export const swaggerPlugin = openapi({
     tags: [
       { name: 'general', description: 'General endpoints' },
       { name: 'health', description: 'Health check endpoints' },
-      { name: 'example', description: 'Example endpoints' },
+      { name: 'auth', description: 'Authentication endpoints' },
     ],
     servers: [
       {
