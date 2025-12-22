@@ -16,12 +16,14 @@
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.0",
+    "@elysiajs/jwt": "^1.1.4",
     "@elysiajs/openapi": "^1.4.12",
     "@prisma/adapter-ppg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "elysia": "latest",
     "ioredis": "^5.3.2",
     "pg": "^8.16.3",
+    "resend": "^4.0.0",
     "prisma": "^7.2.0",
     "prismabox": "^1.1.26",
     "zod": "^4.2.1"

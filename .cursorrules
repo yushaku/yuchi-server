@@ -1,0 +1,162 @@
+# Yuchi Server - Cursor Configuration
+
+## Project Overview
+
+This is the backend server for the Yuchi application, built with:
+
+- **Runtime**: Bun
+- **Framework**: Elysia.js (TypeScript web framework)
+- **Database**: PostgreSQL with Prisma ORM
+- **Cache**: Redis (ioredis)
+- **Authentication**: JWT (Elysia JWT plugin)
+- **Email**: Resend
+- **Validation**: Zod
+- **API Documentation**: OpenAPI/Swagger
+
+## Project Structure
+
+```
+server/
+├── src/
+│   ├── app.ts              # Main Elysia app instance
+│   ├── index.ts            # Entry point
+│   ├── config/             # Configuration files (env, database, redis)
+│   ├── middleware/         # Elysia middleware (cors, error-handler, logger, swagger)
+│   ├── modules/            # Feature modules (health, user, etc.)
+│   │   └── [module]/
+│   │       ├── index.ts    # Route definitions
+│   │       ├── model.ts    # Type definitions
+│   │       └── service.ts  # Business logic
+│   ├── types/              # Shared TypeScript types
+│   └── utils/              # Utility functions
+├── prisma/
+│   └── schema.prisma       # Database schema
+└── generated/              # Generated Prisma and Prismabox code
+```
+
+## Coding Conventions
+
+### Import Path Aliases
+
+Use TypeScript path aliases for imports:
+
+- `@/` → `src/`
+- `@/config/*` → `src/config/*`
+- `@/middleware/*` → `src/middleware/*`
+- `@/modules/*` → `src/modules/*`
+- `@/utils/*` → `src/utils/*`
+- `@/types/*` → `src/types/*`
+
+### Module Structure
+
+Each feature module should follow this pattern:
+
+1. **model.ts**: Define TypeScript types and Zod schemas
+2. **service.ts**: Business logic (abstract class with static methods)
+3. **index.ts**: Elysia route definitions that use the service
+
+### Code Style
+
+- Use **abstract classes with static methods** for services (see `UserService` pattern)
+- Use **Zod** for all validation (request bodies, query params, env vars)
+- Use **async/await** for all asynchronous operations
+- Use **const assertions** and proper TypeScript types
+- Prefer **functional programming** patterns where appropriate
+- Use **Elysia's plugin system** for middleware
+
+### Error Handling
+
+- Use Elysia's error handler middleware
+- Throw descriptive errors that will be caught by the error handler
+- Use Zod validation errors for input validation
+
+### Database
+
+- Use Prisma Client from `@/config/database`
+- Always use transactions for multi-step operations
+- Use Prismabox generated types when available
+- Prefer `upsert` for find-or-create patterns
+
+### Environment Variables
+
+- All env vars must be validated using Zod in `src/config/env.ts`
+- Access env vars through the `env` object from `@/config/env`
+- Never access `process.env` directly in application code
+
+### API Documentation
+
+- Add OpenAPI documentation using Elysia's `detail` option
+- Include tags, summaries, and descriptions for all routes
+- Document request/response schemas
+
+## Package Manager
+
+- Use **pnpm** as the default package manager (as per user preference)
+
+## TypeScript
+
+- Strict mode enabled
+- Target: ES2021
+- Module: ES2022
+- Use proper type annotations, avoid `any`
+- Leverage Prisma generated types
+
+## Testing
+
+- Write tests for service methods
+- Test error cases and edge cases
+- Use descriptive test names
+
+## Common Patterns
+
+### Creating a New Module
+
+1. Create module directory: `src/modules/[name]/`
+2. Create `model.ts` with types and Zod schemas
+3. Create `service.ts` with business logic (abstract class)
+4. Create `index.ts` with Elysia routes
+5. Import and use in `src/app.ts`
+
+### Elysia Route Example
+
+```typescript
+.get(
+  '/endpoint',
+  async ({ query }) => {
+    const validated = schema.parse(query);
+    const result = await Service.method(validated);
+    return { data: result };
+  },
+  {
+    detail: {
+      summary: 'Endpoint description',
+      tags: ['tag'],
+    },
+  }
+)
+```
+
+## Dependencies
+
+- **Elysia**: Latest version
+- **Prisma**: ^7.2.0
+- **Zod**: ^4.2.1
+- **ioredis**: ^5.3.2
+- **Resend**: ^4.0.0
+
+## Notes
+
+- The server runs on port 3000 by default (configurable via PORT env var)
+- API prefix is `/api` by default (configurable via API_PREFIX env var)
+- OpenAPI docs available at `/api/openapi`
+- Health check at `/api/health`
+
+## Zod
+
+verify email by
+
+```js
+const envSchema = z.object({
+  EMAIL: z.email().default('yuchi@resend.dev'),
+});
+```

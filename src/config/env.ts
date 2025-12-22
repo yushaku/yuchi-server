@@ -12,6 +12,10 @@ const envSchema = z.object({
     }),
   JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
+  // Resend email configuration
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.email().default('yuchi@resend.dev'),
+  RESEND_FROM_NAME: z.string().default('Yuchi App - Korean Language Learning'),
 });
 
 const validatedEnv = envSchema.parse({
@@ -21,6 +25,9 @@ const validatedEnv = envSchema.parse({
   GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
   JWT_SECRET: process.env.JWT_SECRET,
   REDIS_URL: process.env.REDIS_URL,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+  RESEND_FROM_NAME: process.env.RESEND_FROM_NAME,
 });
 
 export const env = {
