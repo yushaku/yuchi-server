@@ -1,7 +1,13 @@
 // Service handle business logic, decoupled from Elysia controller
+import { z } from 'zod';
 import { prisma } from '@/config/database';
+import { getRedis } from '@/config/redis';
 import { env } from '@/config/env';
+import { sendOtpEmail } from '@/utils/email';
 import type { UserModel } from './model';
+
+// Email validation schema
+const emailSchema = z.email({ message: 'Invalid email format' });
 
 export abstract class UserService {
   /**
@@ -125,15 +131,72 @@ export abstract class UserService {
   }
 
   /**
-   * Generate JWT token (simple implementation)
-   * In production, use a proper JWT library
+   * Generate a 6-character alphanumeric OTP code (numbers + uppercase letters)
    */
-  static generateToken(userId: string): string {
-    // Simple token generation - in production, use proper JWT library
-    const payload = {
-      userId,
-      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // 7 days
+  static generateOtpCode(): string {
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  /**
+   * Send OTP code to email
+   */
+  static async sendOtp(email: string): Promise<void> {
+    emailSchema.parse(email);
+
+    // Generate OTP code
+    const code = this.generateOtpCode();
+    const redis = getRedis();
+    const otpKey = `otp:${email}`;
+    const ttl = 1 * 60; // 1 minute in seconds
+
+    await redis.del(otpKey);
+    await redis.setex(otpKey, ttl, code);
+
+    // Send OTP via email
+    await sendOtpEmail(email, code);
+  }
+
+  /**
+   * Verify OTP code and login/create user
+   */
+  static async verifyOtpAndLogin(email: string, code: string): Promise<UserModel.userData> {
+    emailSchema.parse(email);
+
+    const redis = getRedis();
+    const otpKey = `otp:${email}`;
+
+    // Verify OTP from Redis
+    const storedCode = await redis.get(otpKey);
+    if (!storedCode || storedCode !== code) throw new Error('Invalid or expired OTP code');
+    await redis.del(otpKey);
+
+    const user = await prisma.user.upsert({
+      where: {
+        email,
+      },
+      update: {
+        emailVerified: true,
+        updatedAt: new Date(),
+      },
+      create: {
+        email,
+        emailVerified: true,
+      },
+    });
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name ?? undefined,
+      picture: user.picture ?? undefined,
+      emailVerified: user.emailVerified,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
     };
-    return Buffer.from(JSON.stringify(payload)).toString('base64url');
   }
 }

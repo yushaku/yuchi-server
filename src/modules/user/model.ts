@@ -44,5 +44,28 @@ export namespace UserModel {
   });
 
   export type loginUrlResponse = typeof loginUrlResponse.static;
+
+  // Send OTP request
+  export const sendOtpRequest = t.Object({
+    email: t.String({ format: 'email' }),
+  });
+
+  export type sendOtpRequest = typeof sendOtpRequest.static;
+
+  // Send OTP response
+  export const sendOtpResponse = t.Object({
+    success: t.Boolean(),
+    message: t.String(),
+  });
+
+  export type sendOtpResponse = typeof sendOtpResponse.static;
+
+  // Verify OTP request
+  export const verifyOtpRequest = t.Object({
+    email: t.String({ format: 'email' }),
+    code: t.String({ minLength: 6, maxLength: 6 }),
+  });
+
+  export type verifyOtpRequest = typeof verifyOtpRequest.static;
 }
 
