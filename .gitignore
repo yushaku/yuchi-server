@@ -50,3 +50,4 @@ dev.db-journal
 **/*.log
 package-lock.json
 **/*.bun
+/generated/prisma
