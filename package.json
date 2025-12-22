@@ -19,12 +19,14 @@
     "@elysiajs/openapi": "^1.4.12",
     "@prisma/client": "^7.2.0",
     "elysia": "latest",
+    "ioredis": "^5.3.2",
     "pg": "^8.16.3",
     "prisma": "^7.2.0",
     "prismabox": "^1.1.26",
     "zod": "^4.2.1"
   },
   "devDependencies": {
+    "@types/ioredis": "^5.0.0",
     "@types/pg": "^8.11.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",

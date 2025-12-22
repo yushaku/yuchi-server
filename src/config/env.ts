@@ -11,6 +11,7 @@ const envSchema = z.object({
       message: 'GOOGLE_REDIRECT_URI must be a valid URL',
     }),
   JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
+  REDIS_URL: z.string().default('redis://localhost:6379'),
 });
 
 const validatedEnv = envSchema.parse({
@@ -19,6 +20,7 @@ const validatedEnv = envSchema.parse({
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
   JWT_SECRET: process.env.JWT_SECRET,
+  REDIS_URL: process.env.REDIS_URL,
 });
 
 export const env = {

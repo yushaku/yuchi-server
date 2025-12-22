@@ -7,7 +7,7 @@ import { swaggerPlugin } from '@/middleware/swagger';
 import { health } from '@/modules/health';
 import { user } from '@/modules/user';
 
-export const app = new Elysia()
+export const app = new Elysia({ prefix: env.API_PREFIX })
   .use(swaggerPlugin)
   .use(logger)
   .use(corsMiddleware)
@@ -33,7 +33,7 @@ export const app = new Elysia()
   .listen(env.PORT);
 
 console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`);
-console.log(`📚 API Documentation: http://${app.server?.hostname}:${app.server?.port}/openapi`);
-console.log(`💚 Health check: http://${app.server?.hostname}:${app.server?.port}/health`);
+console.log(`📚 API Documentation: http://${app.server?.hostname}:${app.server?.port}/api/openapi`);
+console.log(`💚 Health check: http://${app.server?.hostname}:${app.server?.port}/api/health`);
 
 export type App = typeof app;
