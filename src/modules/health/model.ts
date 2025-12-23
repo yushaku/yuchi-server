@@ -6,6 +6,10 @@ export namespace HealthModel {
     status: t.String(),
     timestamp: t.String(),
     uptime: t.Number(),
+    services: t.Object({
+      postgres: t.String(),
+      redis: t.String(),
+    }),
   });
 
   export type healthData = typeof healthData.static;

@@ -1,13 +1,13 @@
 import { PrismaClient } from 'generated/prisma/client';
-import { PrismaPostgresAdapter } from '@prisma/adapter-ppg';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { env } from './env';
 
 if (!env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set');
 }
 
-// Create Prisma adapter for PostgreSQL
-const adapter = new PrismaPostgresAdapter({
+// Create Prisma adapter for PostgreSQL using pg driver
+const adapter = new PrismaPg({
   connectionString: env.DATABASE_URL,
 });
 

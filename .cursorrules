@@ -5,6 +5,7 @@
 This is the backend server for the Yuchi application, built with:
 
 - **Runtime**: Bun
+- **Package manager**: bun
 - **Framework**: Elysia.js (TypeScript web framework)
 - **Database**: PostgreSQL with Prisma ORM
 - **Cache**: Redis (ioredis)
