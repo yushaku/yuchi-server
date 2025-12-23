@@ -29,11 +29,7 @@ export const app = new Elysia({ prefix: env.API_PREFIX })
   )
   // ROUTES HERE
   .use(health)
-  .use(user)
-  .listen(env.PORT);
-
-console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`);
-console.log(`📚 API Documentation: http://${app.server?.hostname}:${app.server?.port}/api/openapi`);
-console.log(`💚 Health check: http://${app.server?.hostname}:${app.server?.port}/api/health`);
+  .use(user);
 
 export type App = typeof app;
+export default app;

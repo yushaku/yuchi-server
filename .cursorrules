@@ -151,6 +151,26 @@ Each feature module should follow this pattern:
 - OpenAPI docs available at `/api/openapi`
 - Health check at `/api/health`
 
+## Deployment
+
+### Vercel
+
+The project is configured for Vercel deployment with Bun runtime:
+
+- **Entry point**: `src/index.ts` exports the Elysia app as default export
+- **Configuration**: `vercel.json` specifies Bun 1.x runtime
+- **Serverless**: The app conditionally listens only when not running on Vercel (checks `VERCEL` env var)
+- **Local development**: Run `bun run dev` or `vc dev` (Vercel CLI)
+- **Deployment**: Run `vc deploy` or push to connected Git repository
+
+Reference: https://elysiajs.com/integrations/vercel
+
+**Important**:
+
+- The app automatically detects Vercel environment via `process.env.VERCEL`
+- On Vercel, the serverless function handles the server, so `.listen()` is not called
+- All environment variables must be configured in Vercel dashboard
+
 ## Zod
 
 verify email by
