@@ -199,4 +199,27 @@ export abstract class UserService {
       updatedAt: user.updatedAt.toISOString(),
     };
   }
+
+  /**
+   * Get user by ID (for authenticated requests)
+   */
+  static async getUserById(userId: string): Promise<UserModel.userData> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name ?? '',
+      picture: user.picture ?? '',
+      emailVerified: user.emailVerified,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    };
+  }
 }
