@@ -1,9 +1,9 @@
 // Auth controller - handles authentication endpoints
-import { Elysia, status, t } from 'elysia';
+import { Elysia, t } from 'elysia';
 import { jwtPlugin } from '@/middleware/auth';
 import { UserService } from './service';
 import { UserModel } from './model';
-import { success } from '@/utils/response';
+import { BadRequestException } from '@/utils/exceptions';
 
 export const authController = new Elysia({ prefix: '/auth' })
   // Base JWT plugin for routes that issue tokens (login, callbacks, etc.)
@@ -12,7 +12,10 @@ export const authController = new Elysia({ prefix: '/auth' })
     '/google',
     () => {
       const url = UserService.getGoogleLoginUrl();
-      return success({ url });
+      return {
+        success: true,
+        data: { url },
+      };
     },
     {
       detail: {
@@ -28,48 +31,40 @@ export const authController = new Elysia({ prefix: '/auth' })
   .get(
     '/google/callback',
     async ({ jwt, query, set }) => {
-      try {
-        const { code } = query as UserModel.googleCallbackQuery;
+      const { code } = query as UserModel.googleCallbackQuery;
 
-        if (!code) {
-          set.status = 400;
-          return status(400, { error: 'Authorization code is required' });
-        }
-
-        const tokens = await UserService.exchangeCodeForToken(code);
-        const googleUser = await UserService.getGoogleUserInfo(tokens.access_token);
-        const user = await UserService.findOrCreateUser(googleUser);
-        const token = await jwt.sign({ userId: user.id });
-
-        // Set access token in cookie
-        const isProduction = process.env.NODE_ENV === 'production';
-        const cookieOptions = [
-          `accessToken=${token}`,
-          'HttpOnly',
-          isProduction ? 'Secure' : '',
-          'SameSite=Lax',
-          `Max-Age=${7 * 24 * 60 * 60}`, // 7 days
-          'Path=/',
-        ]
-          .filter(Boolean)
-          .join('; ');
-
-        set.headers['Set-Cookie'] = cookieOptions;
-
-        return success(
-          {
-            user,
-            token,
-          },
-          'Login successful',
-        );
-      } catch (error) {
-        set.status = 500;
-        return status(500, {
-          error: 'Authentication failed',
-          message: error instanceof Error ? error.message : 'Unknown error occurred',
-        });
+      if (!code) {
+        throw new BadRequestException('Authorization code is required', 'MissingCode');
       }
+
+      const tokens = await UserService.exchangeCodeForToken(code);
+      const googleUser = await UserService.getGoogleUserInfo(tokens.access_token);
+      const user = await UserService.findOrCreateUser(googleUser);
+      const token = await jwt.sign({ userId: user.id });
+
+      // Set access token in cookie
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieOptions = [
+        `accessToken=${token}`,
+        'HttpOnly',
+        isProduction ? 'Secure' : '',
+        'SameSite=Lax',
+        `Max-Age=${7 * 24 * 60 * 60}`, // 7 days
+        'Path=/',
+      ]
+        .filter(Boolean)
+        .join('; ');
+
+      set.headers['Set-Cookie'] = cookieOptions;
+
+      return {
+        success: true,
+        data: {
+          user,
+          token,
+        },
+        message: 'Login successful',
+      };
     },
     {
       query: UserModel.googleCallbackQuery,
@@ -87,23 +82,15 @@ export const authController = new Elysia({ prefix: '/auth' })
   )
   .post(
     '/email/send-otp',
-    async ({ body, set }) => {
-      try {
-        const { email } = body as UserModel.sendOtpRequest;
+    async ({ body }) => {
+      const { email } = body as UserModel.sendOtpRequest;
 
-        await UserService.sendOtp(email);
+      await UserService.sendOtp(email);
 
-        return {
-          success: true,
-          message: 'OTP code sent to your email',
-        };
-      } catch (error) {
-        set.status = 400;
-        return status(400, {
-          error: 'Failed to send OTP',
-          message: error instanceof Error ? error.message : 'Unknown error occurred',
-        });
-      }
+      return {
+        success: true,
+        message: 'OTP code sent to your email',
+      };
     },
     {
       body: UserModel.sendOtpRequest,
@@ -121,41 +108,34 @@ export const authController = new Elysia({ prefix: '/auth' })
   .post(
     '/email/verify-otp',
     async ({ jwt, body, set }) => {
-      try {
-        const { email, code } = body as UserModel.verifyOtpRequest;
+      const { email, code } = body as UserModel.verifyOtpRequest;
 
-        const user = await UserService.verifyOtpAndLogin(email, code);
-        const token = await jwt.sign({ userId: user.id });
+      const user = await UserService.verifyOtpAndLogin(email, code);
+      const token = await jwt.sign({ userId: user.id });
 
-        // Set access token in cookie
-        const isProduction = process.env.NODE_ENV === 'production';
-        const cookieOptions = [
-          `accessToken=${token}`,
-          'HttpOnly',
-          isProduction ? 'Secure' : '',
-          'SameSite=Lax',
-          `Max-Age=${7 * 24 * 60 * 60}`, // 7 days
-          'Path=/',
-        ]
-          .filter(Boolean)
-          .join('; ');
+      // Set access token in cookie
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieOptions = [
+        `accessToken=${token}`,
+        'HttpOnly',
+        isProduction ? 'Secure' : '',
+        'SameSite=Lax',
+        `Max-Age=${7 * 24 * 60 * 60}`, // 7 days
+        'Path=/',
+      ]
+        .filter(Boolean)
+        .join('; ');
 
-        set.headers['Set-Cookie'] = cookieOptions;
+      set.headers['Set-Cookie'] = cookieOptions;
 
-        return success(
-          {
-            user,
-            token,
-          },
-          'Login successful',
-        );
-      } catch (error) {
-        set.status = 400;
-        return status(400, {
-          error: 'OTP verification failed',
-          message: error instanceof Error ? error.message : 'Unknown error occurred',
-        });
-      }
+      return {
+        success: true,
+        data: {
+          user,
+          token,
+        },
+        message: 'Login successful',
+      };
     },
     {
       body: UserModel.verifyOtpRequest,
@@ -169,5 +149,38 @@ export const authController = new Elysia({ prefix: '/auth' })
         400: t.Object({ error: t.String(), message: t.String() }),
       },
     },
-  );
+  )
+  .post(
+    '/signout',
+    async ({ set }) => {
+      // Clear access token cookie by setting it with Max-Age=0
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieOptions = [
+        'accessToken=',
+        'HttpOnly',
+        isProduction ? 'Secure' : '',
+        'SameSite=Lax',
+        'Max-Age=0',
+        'Path=/',
+      ]
+        .filter(Boolean)
+        .join('; ');
 
+      set.headers['Set-Cookie'] = cookieOptions;
+
+      return {
+        success: true,
+        message: 'Sign out successful',
+      };
+    },
+    {
+      detail: {
+        summary: 'Sign Out',
+        description: 'Signs out the current user by clearing the access token cookie',
+        tags: ['auth'],
+      },
+      response: {
+        200: UserModel.signOutResponse,
+      },
+    },
+  );

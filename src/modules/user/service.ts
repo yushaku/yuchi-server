@@ -4,6 +4,11 @@ import { prisma } from '@/config/database';
 import { getRedis } from '@/config/redis';
 import { env } from '@/config/env';
 import { sendOtpEmail } from '@/utils/email';
+import {
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@/utils/exceptions';
 import type { UserModel } from './model';
 
 // Email validation schema
@@ -50,7 +55,10 @@ export abstract class UserService {
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Failed to exchange code: ${error}`);
+      throw new InternalServerErrorException(
+        `Failed to exchange code: ${error}`,
+        'GoogleOAuthError',
+      );
     }
 
     return (await response.json()) as {
@@ -77,7 +85,10 @@ export abstract class UserService {
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Failed to get user info: ${error}`);
+      throw new InternalServerErrorException(
+        `Failed to get user info: ${error}`,
+        'GoogleUserInfoError',
+      );
     }
 
     return (await response.json()) as {
@@ -172,7 +183,9 @@ export abstract class UserService {
 
     // Verify OTP from Redis
     const storedCode = await redis.get(otpKey);
-    if (!storedCode || storedCode !== code) throw new Error('Invalid or expired OTP code');
+    if (!storedCode || storedCode !== code) {
+      throw new BadRequestException('Invalid or expired OTP code', 'InvalidOtp');
+    }
     await redis.del(otpKey);
 
     const user = await prisma.user.upsert({
@@ -203,12 +216,14 @@ export abstract class UserService {
   /**
    * Get user by ID (for authenticated requests)
    */
-  static async getUserById(userId: string): Promise<UserModel.userData | null> {
+  static async getUserById(userId: string): Promise<UserModel.userData> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
 
-    if (!user) return null;
+    if (!user) {
+      throw new NotFoundException('User not found', 'UserNotFound');
+    }
 
     return {
       id: user.id,

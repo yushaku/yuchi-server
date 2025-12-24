@@ -1,6 +1,5 @@
 // Controller handle HTTP related eg. routing, request validation
 import { Elysia } from 'elysia';
-import { success } from '@/utils/response';
 import { prisma } from '@/config/database';
 import { getRedis } from '@/config/redis';
 import { HealthModel } from './model';
@@ -34,15 +33,18 @@ export const health = new Elysia({ prefix: '/health' }).get(
 
     const overallStatus = postgresStatus === 'ok' && redisStatus === 'ok' ? 'ok' : 'degraded';
 
-    return success({
-      status: overallStatus,
-      timestamp,
-      uptime: process.uptime(),
-      services: {
-        postgres: postgresStatus,
-        redis: redisStatus,
+    return {
+      success: true,
+      data: {
+        status: overallStatus,
+        timestamp,
+        uptime: process.uptime(),
+        services: {
+          postgres: postgresStatus,
+          redis: redisStatus,
+        },
       },
-    });
+    };
   },
   {
     detail: {

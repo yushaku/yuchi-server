@@ -1,21 +1,18 @@
 // User data controller - handles user-related endpoints
-import { Elysia, status, t } from 'elysia';
+import { Elysia, t } from 'elysia';
 import { jwtPlugin, verifyToken } from '@/middleware/auth';
 import { UserService } from './service';
 import { UserModel } from './model';
-import { success } from '@/utils/response';
 
 export const userController = new Elysia({ prefix: '/user' }).use(jwtPlugin).get(
   '/me',
   async ({ request, jwt }) => {
     const userId = await verifyToken({ request, jwt });
-    if (!userId) {
-      return status(401, { error: 'Unauthorized' });
-    }
-
     const user = await UserService.getUserById(userId);
-    if (!user) return status(404, { error: 'User not found' });
-    return success({ user });
+    return {
+      success: true,
+      data: { user },
+    };
   },
   {
     detail: {

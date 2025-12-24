@@ -1,4 +1,4 @@
-import { Elysia } from 'elysia';
+import { Elysia, status } from 'elysia';
 import { env } from '@/config/env';
 import { logger } from '@/middleware/logger';
 import { corsMiddleware } from '@/middleware/cors';
@@ -11,7 +11,6 @@ export const app = new Elysia({ prefix: env.API_PREFIX })
   .use(swaggerPlugin)
   .use(logger)
   .use(corsMiddleware)
-  .use(errorHandler)
   .get(
     '/',
     () => ({
@@ -28,6 +27,7 @@ export const app = new Elysia({ prefix: env.API_PREFIX })
     },
   )
   // ROUTES HERE
+  .onError(errorHandler)
   .use(health)
   .use(user);
 

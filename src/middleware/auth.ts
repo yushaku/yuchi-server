@@ -1,6 +1,7 @@
 import { Elysia, status } from 'elysia';
 import { jwt } from '@elysiajs/jwt';
 import { env } from '@/config/env';
+import { UnauthorizedException } from '@/utils/exceptions';
 
 /**
  * Elysia plugin that provides JWT functionality
@@ -28,42 +29,29 @@ export const jwtPlugin = jwt({
 export const authMiddleware = new Elysia({ name: 'auth-middleware' })
   .use(jwtPlugin)
   .derive(async ({ request, jwt }) => {
-    console.log('[authMiddleware] derive executing');
-
     if (request.method === 'OPTIONS') return {};
 
     const authHeader = request.headers.get('authorization') ?? request.headers.get('Authorization');
-    console.log('[authMiddleware] derive - authHeader:', authHeader);
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('[authMiddleware] derive - no auth header');
       return {};
     }
 
     const token = authHeader.slice('Bearer '.length).trim();
-    console.log(
-      '[authMiddleware] derive - token:',
-      token ? `${token.substring(0, 20)}...` : 'empty',
-    );
 
     try {
       const payload = await jwt.verify(token);
-      console.log('[authMiddleware] derive - payload:', payload);
 
       if (payload && typeof payload === 'object' && 'userId' in payload) {
         const userId = String((payload as { userId: string }).userId);
-        console.log('[authMiddleware] derive - userId extracted:', userId);
         return {
           authUserId: userId,
         };
       }
-      console.log('[authMiddleware] derive - payload missing userId');
     } catch (error) {
-      console.log('[authMiddleware] derive - verification error:', error);
       // Error already handled in onBeforeHandle
     }
 
-    console.log('[authMiddleware] derive - returning empty object');
     return {};
   });
 
@@ -120,7 +108,7 @@ const extractToken = (request: Request): string | null => {
  * Verifies JWT token from request and returns user ID
  * Checks cookie first, then Authorization header
  *
- * @returns User ID if token is valid, null otherwise
+ * @returns User ID if token is valid
  */
 export const verifyToken = async ({
   request,
@@ -128,14 +116,18 @@ export const verifyToken = async ({
 }: {
   request: Request;
   jwt: any;
-}): Promise<string | null> => {
+}): Promise<string> => {
   const token = extractToken(request);
-  if (!token) return null;
+  if (!token) {
+    throw new UnauthorizedException('Unauthorized', 'Token not found');
+  }
 
   try {
     const payload = (await jwt.verify(token)) as { userId: string } | null;
-    return payload?.userId ?? null;
+    if (!payload || !payload.userId)
+      throw new UnauthorizedException('Unauthorized', 'User ID not found in token');
+    return payload.userId;
   } catch {
-    return null;
+    throw new UnauthorizedException('Unauthorized', 'Invalid token');
   }
 };

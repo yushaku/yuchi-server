@@ -78,4 +78,12 @@ export namespace UserModel {
   });
 
   export type verifyOtpRequest = typeof verifyOtpRequest.static;
+
+  // Sign out response
+  export const signOutResponse = t.Object({
+    success: t.Boolean(),
+    message: t.String(),
+  });
+
+  export type signOutResponse = typeof signOutResponse.static;
 }
