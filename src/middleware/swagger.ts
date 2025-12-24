@@ -12,6 +12,7 @@ export const swaggerPlugin = openapi({
       { name: 'general', description: 'General endpoints' },
       { name: 'health', description: 'Health check endpoints' },
       { name: 'auth', description: 'Authentication endpoints' },
+      { name: 'user', description: 'User endpoints' },
     ],
     servers: [
       {
@@ -19,5 +20,15 @@ export const swaggerPlugin = openapi({
         description: 'Development server',
       },
     ],
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Enter JWT token obtained from login endpoints',
+        },
+      },
+    },
   },
 });

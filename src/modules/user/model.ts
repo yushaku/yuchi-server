@@ -35,6 +35,17 @@ export namespace UserModel {
 
   export type authResponse = typeof authResponse.static;
 
+  // Current user response (for /auth/me)
+  export const currentUserResponse = t.Object({
+    success: t.Boolean(),
+    data: t.Object({
+      user: userData,
+    }),
+    message: t.Optional(t.String()),
+  });
+
+  export type currentUserResponse = typeof currentUserResponse.static;
+
   // Login URL response
   export const loginUrlResponse = t.Object({
     success: t.Boolean(),
@@ -68,4 +79,3 @@ export namespace UserModel {
 
   export type verifyOtpRequest = typeof verifyOtpRequest.static;
 }
-
